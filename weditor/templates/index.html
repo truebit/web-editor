@@ -137,10 +137,6 @@
                 </tr>
               </template>
               <template>
-                <tr>
-                  <td class="always-exists-attr">XPathLite</td>
-                  <td contenteditable v-text="elemXPathLite"></td>
-                </tr>
                 <!-- <tr>
                   <td>XPath(full)</td>
                   <td contenteditable v-text="elemXPathFull"></td>
@@ -179,6 +175,10 @@
                   <td>{{!JSON.stringify(elem.rect)}}</td>
                 </tr>
               </template>
+              <tr>
+                <td class="always-exists-attr">XPathLite</td>
+                <td contenteditable v-text="elemXPathLite"></td>
+              </tr>
             </tbody>
             <tfoot></tfoot>
           </table>

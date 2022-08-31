@@ -113,6 +113,7 @@ window.vm = new Vue({
       // scan nodes
       this.mapAttrCount = {}
       this.nodes.forEach((n) => {
+        this.incrAttrCount("name", n.name)
         this.incrAttrCount("label", n.label)
         this.incrAttrCount("resourceId", n.resourceId)
         this.incrAttrCount("text", n.text)
@@ -124,7 +125,10 @@ window.vm = new Vue({
       const array = [];
       while (node && node._parentId) {
         const parent = this.originNodeMaps[node._parentId]
-        if (this.getAttrCount("label", node.label) === 1) {
+        if (this.getAttrCount("name", node.name) === 1) {
+          array.push(`*[@name="${node.name}"]`)
+          break
+        } else if (this.getAttrCount("label", node.label) === 1) {
           array.push(`*[@label="${node.label}"]`)
           break
         } else if (this.getAttrCount("resourceId", node.resourceId) === 1) {
@@ -330,15 +334,27 @@ window.vm = new Vue({
       })
     },
     clearCode() {
-      const code = [
-        "# coding: utf-8",
-        "#",
-        "import uiautomator2 as u2",
-        "",
-        "d = u2.connect()",
-        "",
-        "",
-      ].join("\n");
+      if (this.platform === "Android") {
+        const code = [
+          "# coding: utf-8",
+          "#",
+          "import uiautomator2 as u2",
+          "",
+          "d = u2.connect()",
+          "",
+          "",
+        ].join("\n");
+      }else {
+        const code = [
+          "# coding: utf-8",
+          "#",
+          "import wda",
+          "d = wda.Client()",
+          "",
+          "",
+        ].join("\n");
+
+      }
       this.editor.setValue(code)
       this.editor.session.selection.clearSelection()
     },
@@ -404,9 +420,10 @@ window.vm = new Vue({
       n.text = source._type
       if (source.name) {
         n.text += " - " + source.name;
-      }
-      if (source.resourceId) {
+      } else if (source.resourceId) {
         n.text += " - " + source.resourceId;
+      } else if (source.description) {
+        n.text += " - " + source.description;
       }
       n.icon = this.sourceTypeIcon(source.type);
       if (source.children) {
@@ -787,6 +804,7 @@ window.vm = new Vue({
           localStorage.setItem("activity", ret.activity);
           localStorage.setItem("packageName", ret.packageName);
           localStorage.setItem("windowSize", ret.windowSize);
+          localStorage.setItem("is_md5", ret.is_md5);
           this.activity = ret.activity; // only for android
           this.packageName = ret.packageName;
           this.drawAllNodeFromSource(ret.jsonHierarchy);
@@ -1140,10 +1158,10 @@ window.vm = new Vue({
         .then(this.delayReload)
     },
     generateNodeSelectorKwargs: function (node) {
-      // iOS: name, label, className
-      // Android: text, description, resourceId, className
+      // iOS: rawIdentifier, name, label, className
+      // Android: description, text, resourceId, className
       let kwargs = {};
-      ['label', 'resourceId', 'name', 'text', 'type', 'tag', 'description', 'className'].some((key) => {
+      ['name', 'description', 'label', 'resourceId', 'text', 'type', 'tag', 'className'].some((key) => {
         if (!node[key]) {
           return false;
         }
